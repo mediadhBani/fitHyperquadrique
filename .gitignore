@@ -1,0 +1,11 @@
+*.7z
+*.csv
+*.jpg
+*.pdf
+*.png
+*.rar
+*.tex
+*.txt
+*.zip
+.ipynb_checkpoints/
+__pycache__/
