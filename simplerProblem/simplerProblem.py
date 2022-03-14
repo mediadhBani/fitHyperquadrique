@@ -1,6 +1,14 @@
+import logging
 from matplotlib import animation
 import matplotlib.pyplot as plt
 import numpy as np
+import sys
+
+# Create a custom logger
+logger = logging.getLogger(__file__)
+logging.basicConfig(format='%(asctime)s %(levelname)-8s -- %(message)s',
+                    level=logging.INFO,
+                    datefmt='%y%m%d-%H%M%S')
 
 def hyperquadrique(x: float, y: float, lsParam: list[list[float]]) -> float:
     """Calcule de la fonction hyperquadrique en un point donne.
@@ -17,7 +25,7 @@ def hyperquadrique(x: float, y: float, lsParam: list[list[float]]) -> float:
     return som-1
 
 def droites_enveloppantes(lsParam: list[list[float]], ylim: tuple,
-                          ax: plt.gca()) -> list:
+                          ax: plt.gca()) -> tuple:
 
     """Trace les droites enveloppantes de l'hyperquadrique de parametres donnes.
 
@@ -30,14 +38,16 @@ def droites_enveloppantes(lsParam: list[list[float]], ylim: tuple,
     - env: liste de droites enveloppantes sous forme de collections
         (classe ~matplotlib.collections.LineCollection)
     """
+
+    lsLines = []
     for a, b, c, _ in lsParam:
         if b:
-            env = [ax.axline((0, (c+1)/-b), slope=-a/b, lw=1),
-                   ax.axline((0, (c-1)/-b), slope=-a/b, lw=1)]
+            lsLines.append(ax.axline((0, (c+1)/-b), slope=-a/b, lw=1))
+            lsLines.append(ax.axline((0, (c-1)/-b), slope=-a/b, lw=1))
         else:
-            env = [ax.vlines([-(c+1)/a, (1-c)/a], *ylim, lw=1)]
-    
-    return env
+            lsLines.append(ax.vlines([-(c+1)/a, (1-c)/a], *ylim, lw=1))
+
+    return lsLines
 
 def decrire_hyperquadrique(lsParam: list[list[float]]) -> None:
     """Description des paramètres d'une hyperquadrique.
@@ -183,7 +193,6 @@ def newton(x: list[float], y: list[float], a0: float, b0: float,
     return lsA, lsB, i, convergence
 
 if __name__ == '__main__':
-
     # Extraction de points
     with open('Data_HQ_Ph1et2.csv', 'r') as f:
         pts = [[float(u) for u in line.split(',')] for line in f.readlines()]
@@ -191,116 +200,108 @@ if __name__ == '__main__':
     # construction des meshgrids des espaces (a, b) puis (x, y)
     meshAB = np.mgrid[-1:1:100j, -1:1:100j]
     meshXY = np.mgrid[-1.5:1.5:100j, -1.5:1.5:100j]
-    
+
     # isovaleurs de l'espace (a, b)
     lsIso = 3*(np.logspace(0, 1)-1)
 
+    # bornes du graphes dans l'espace (x, y)
+    bornesHq = (-1.5, 1.5)
+
     # comparaison des deux methodes
-    lsFct = [descente_gradient, newton]
     lsArg = [{'a0': 0.1, 'b0': -0.1, 'alpha': 4e-3, 'nmax': 100},
               {'a0': np.random.random(), 'b0': np.random.random()}]
-    lsTitle = ["Descente de gradient", "Méthode de Newton"]
+    lsFct = [descente_gradient, newton]
     lsFname = ["descenteGradient", "methodeNewton"]
-    
-    # for fct, arg, ttl in zip(lsFunc, lsArgs, lsTitle):
-    #     lsA, lsB, idx, cvg = fct(*pts, **arg)
-
-        # fig, ax = plt.subplots(1, 2, num=ttl)
-        # plt.suptitle(ttl)
-
-        # # representation de la methode courante dans l'espace (a, b)
-        # ax[0].contour(*meshAB, fn_objectif(*pts, *meshAB), levels=lsIso)
-        # ax[0].plot(lsA, lsB, '-ro', lw=1, markersize=2, label="Itérations")
-        # ax[0].plot(lsA[idx], lsB[idx], 'ko', markersize=5, label="Point final")
-
-        # ax[0].set_title("Espace des paramètres")
-        # ax[0].set_xlabel("a")
-        # ax[0].set_ylabel("b")
-        # ax[0].axis('square')
-        # ax[0].legend()
-
-        # # representation de la methode courante dans l'espace (x, y)
-        # cnt = ax[1].contour(*meshXY, psi(*meshXY, lsA[idx], lsB[idx]),
-        #                     levels=[0], colors='r')
-        # ax[1].scatter(*pts, label="Données")
-        # # ax[1].clabel(cnt, fmt="Hyperquadrique")
-
-        # ax[1].set_title("Espace des données")
-        # ax[1].set_xlabel("x")
-        # ax[1].set_ylabel("y")
-        # ax[1].axis('square')
-        # ax[1].legend()
-
-    # plt.show()
+    lsTitle = ["Descente de gradient", "Méthode de Newton"]
 
 ################################################################################
 
-    def simple_hyperquadrique(i: int) -> list[list[float]]:
-        return [[lsA[i], lsB[i], 0, 4], [1, 1, 0, 4]]
+    # Affichage etat final #
+
+    # for fct, arg, ttl in zip(lsFct, lsArg, lsTitle):
+    #     lsA, lsB, idx, cvg = fct(*pts, **arg)
+
+    #     fig, ax = plt.subplots(1, 2, num=ttl + " fin")
+    #     plt.suptitle(ttl)
+
+    #     # representation de la methode courante dans l'espace (a, b)
+    #     ax[0].contour(*meshAB, fn_objectif(*pts, *meshAB), levels=lsIso)
+    #     ax[0].plot(lsA, lsB, '-ro', lw=1, markersize=2, label="Itérations")
+    #     ax[0].plot(lsA[idx], lsB[idx], 'ko', markersize=5, label="Point final")
+
+    #     ax[0].axis('square')
+    #     ax[0].legend()
+    #     ax[0].set_title("Espace des paramètres")
+    #     ax[0].set_xlabel("a")
+    #     ax[0].set_ylabel("b")
+
+    #     # representation de la methode courante dans l'espace (x, y)
+    #     cnt = ax[1].contour(*meshXY, psi(*meshXY, lsA[idx], lsB[idx]),
+    #                         levels=[0], colors='r')
+    #     ax[1].scatter(*pts, label="Données")
+
+    #     ax[1].axis('square')
+    #     ax[1].legend()
+    #     ax[1].set_title("Espace des données")
+    #     ax[1].set_xlabel("x")
+    #     ax[1].set_ylabel("y")
+
+################################################################################
+
+    # Animation des iteration #
     
-    bornesHq = (-1.5, 1.5)
+    # def animate(i):
+    #     """Animation de la méthode de fit.
 
-    def animate(i):
-        """Animation de la méthode de fit.
+    #     Entree:
+    #     - i: indice d'itération
+    #     """
+    #     global cnt, mth
 
-        Entree:
-        - i: indice d'itération
-        """
-        global cnt, env, mth
+    #     # rafraichissement de l'hyperquadrique
+    #     for e in cnt.collections:
+    #         e.remove()
 
-        # rafraichissement de l'hyperquadrique
-        for e in cnt.collections:
-            e.remove()
-        # # rafraichissement des droites enveloppantes
-        # for e in env:
-        #     e.remove()
-        
-        # fig.canvas.draw()
+    #     # trace des iteration de la methode courante
+    #     mth = ax[0].plot(lsA[i-1:i+1], lsB[i-1:i+1], '-ro', lw=1, markersize=2,
+    #                         label="Itérations")
 
-        mth = ax[0].plot(lsA[i-1:i+1], lsB[i-1:i+1], '-ro', lw=1, markersize=2,
-                            label="Itérations")
-        cnt = ax[1].contour(*meshXY, psi(*meshXY, lsA[i], lsB[i]),
-                            levels=[0], colors='r')
-        # env = droites_enveloppantes(simple_hyperquadrique(i), bornesHq, ax[1])
+    #     # trace de l'hyperquadrique
+    #     cnt = ax[1].contour(*meshXY, psi(*meshXY, lsA[i], lsB[i]),
+    #                         levels=[0], colors='r')
 
-    for fct, arg, ttl, fnm in zip(lsFct, lsArg, lsTitle, lsFname):
-        lsA, lsB, idx, cvg = fct(*pts, **arg)
+    # for fct, arg, ttl, fnm in zip(lsFct, lsArg, lsTitle, lsFname):
+    #     logging.info(ttl + " en cours...")
 
-        fig, ax = plt.subplots(1, 2, num=ttl)
-        plt.suptitle(ttl)
+    #     lsA, lsB, idx, cvg = fct(*pts, **arg)
 
-        # representation de la methode courante dans l'espace (a, b)
-        ax[0].contour(*meshAB, fn_objectif(*pts, *meshAB), levels=lsIso)
-        mth = ax[0].plot(lsA[0], lsB[0], '-ro', lw=1, markersize=2, label="Itérations")
+    #     fig, ax = plt.subplots(1, 2, num=ttl)
+    #     plt.suptitle(ttl)
 
-        ax[0].set_title("Espace des paramètres")
-        ax[0].set_xlabel("a")
-        ax[0].set_ylabel("b")
-        ax[0].axis('square')
-        ax[0].legend()
+    #     # representation de la methode courante dans l'espace (a, b)
+    #     ax[0].contour(*meshAB, fn_objectif(*pts, *meshAB), levels=lsIso)
+    #     mth = ax[0].plot(lsA[0], lsB[0], '-ro', lw=1, markersize=2,
+    #                      label="Itérations")
 
-        # representation de la methode courante dans l'espace (x, y)
-        ax[1].scatter(*pts, label="Données")
-        cnt = ax[1].contour(*meshXY, psi(*meshXY, lsA[idx], lsB[idx]),
-                            levels=[0], colors='r')
-        # env = droites_enveloppantes(simple_hyperquadrique(0), bornesHq, ax[1])
+    #     ax[0].axis('square')
+    #     ax[0].legend()
+    #     ax[0].set_title("Espace des paramètres")
+    #     ax[0].set_xlabel("a")
+    #     ax[0].set_ylabel("b")
 
-        ax[1].set_title("Espace des données")
-        ax[1].set_xlabel("x")
-        ax[1].set_ylabel("y")
-        ax[1].set_xlim(bornesHq)
-        ax[1].set_ylim(bornesHq)
-        ax[1].axis('square')
-        ax[1].legend()
+    #     # representation de la methode courante dans l'espace (x, y)
+    #     ax[1].scatter(*pts, label="Données")
+    #     cnt = ax[1].contour(*meshXY, psi(*meshXY, lsA[idx], lsB[idx]),
+    #                         levels=[0], colors='r')
 
-        fig.tight_layout()
+    #     ax[1].autoscale(False)
+    #     ax[1].axis('square')
+    #     ax[1].legend()
+    #     ax[1].set_title("Espace des données")
+    #     ax[1].set_xlabel("x")
+    #     ax[1].set_ylabel("y")
 
-        boucle = False
-        anim = animation.FuncAnimation(fig, animate, frames=idx, repeat=boucle)
+    #     fig.tight_layout()
 
-        if boucle:
-            plt.show()
-        else:
-            anim.save(fnm + ".gif", writer='imagemagick', fps=15)
-        
-        exit()
+    #     anim = animation.FuncAnimation(fig, animate, frames=idx)
+    #     anim.save(fnm + ".gif", writer='imagemagick', fps=15)

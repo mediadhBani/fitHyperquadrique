@@ -1,11 +1,13 @@
 *.7z
 *.csv
+*.ipynb
 *.jpg
+*.log
 *.pdf
 *.png
 *.rar
 *.tex
 *.txt
 *.zip
-.ipynb_checkpoints/
 __pycache__/
+~*

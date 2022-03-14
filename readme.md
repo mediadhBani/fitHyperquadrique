@@ -21,5 +21,20 @@ dossier *fullProblem* contient ceux du problèmes général.
 ## Améliorations
 
 - [ ] Réécrtiture de la solution selon un paradigme objet
+- [x] ajout d'une animation
 - [ ] augmentation de la robustesse de la solution généralisée
 - [ ] amélioration de performance via *Cython*
+
+## Résultats
+
+### Descente de gradient
+
+Lente mais robuste.
+
+![Descente de gradient](./simplerProblem/descenteGradient_comp.gif)
+
+### Méthode de Newton
+
+Rapide mais risque élevé de divergence.
+
+![Méthode de Newton](./simplerProblem/methodeNewton.gif)
