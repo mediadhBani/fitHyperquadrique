@@ -15,15 +15,15 @@ sont la descente de gradient et la méthode de Newton.
 
 ## Strcuture du projet
 
-Le dossier *subproblem* contient les scripts du problème simplifié, tandis que le
-dossier *fullProblem* contient ceux du problèmes général.
+Le dossier *simplerProblem* contient les scripts du problème simplifié, tandis
+que le dossier *fullProblem* contient ceux du problèmes général.
 
 ## Améliorations
 
-- [ ] Réécrtiture de la solution selon un paradigme objet
-- [x] ajout d'une animation
-- [ ] amélioration de la robustesse de la solution généralisée
-- [ ] amélioration de performance via *Cython*
+- [ ] Réécrire le programme selon un paradigme objet
+- [x] ajouter une illustration du principe (animation)
+- [ ] accroître la robustesse de la solution généralisée (algorithme de Levenberg-Marquardt)
+- [ ] rendre le programme plus performant via *Cython*
 
 ## Résultats
 
