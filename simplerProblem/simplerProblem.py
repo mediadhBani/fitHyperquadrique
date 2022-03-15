@@ -1,5 +1,5 @@
 import logging
-from matplotlib import animation
+# from matplotlib import animation
 import matplotlib.pyplot as plt
 import numpy as np
 import sys
@@ -25,7 +25,7 @@ def hyperquadrique(x: float, y: float, lsParam: list[list[float]]) -> float:
     return som-1
 
 def droites_enveloppantes(lsParam: list[list[float]], ylim: tuple,
-                          ax: plt.gca()) -> tuple:
+                          ax: plt.gca()) -> list:
 
     """Trace les droites enveloppantes de l'hyperquadrique de parametres donnes.
 
@@ -39,13 +39,12 @@ def droites_enveloppantes(lsParam: list[list[float]], ylim: tuple,
         (classe ~matplotlib.collections.LineCollection)
     """
 
-    lsLines = []
     for a, b, c, _ in lsParam:
         if b:
-            lsLines.append(ax.axline((0, (c+1)/-b), slope=-a/b, lw=1))
-            lsLines.append(ax.axline((0, (c-1)/-b), slope=-a/b, lw=1))
+            lsLines = [ax.axline((0, (c+1)/-b), slope=-a/b, lw=1),
+                       ax.axline((0, (c-1)/-b), slope=-a/b, lw=1)]
         else:
-            lsLines.append(ax.vlines([-(c+1)/a, (1-c)/a], *ylim, lw=1))
+            lsLines = [ax.vlines([-(c+1)/a, (1-c)/a], *ylim, lw=1)]
 
     return lsLines
 
@@ -56,7 +55,7 @@ def decrire_hyperquadrique(lsParam: list[list[float]]) -> None:
     - lsParam: liste des parametres de l'hyperquadrique
     """
     for k, (a, b, c, g) in enumerate(lsParam):
-        print(f"Terme {k: 2}: {a=:6.3f} {b=:6.3f} {c=:6.3f} gamma={g:6.3f}")
+        print(f"Terme {k} : {a=:+8.2e} {b=:+8.2e} {c=:+8.2e} gamma={g:+8.2e}")
 
 ################################################################################
 
