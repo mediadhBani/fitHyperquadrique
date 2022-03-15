@@ -11,7 +11,7 @@ le problème général.
 Le problème simplifié à deux inconnues permet de visualiser le fonctionnement de
 la méthode de recherche de ces deux paramètres et ainsi d'analyser sont
 comportement et ses conditions de convergence. Les méthodes implémentées ici
-sont celles de déscente de gradient et de Newton.
+sont la descente de gradient et la méthode de Newton.
 
 ## Strcuture du projet
 
@@ -22,19 +22,19 @@ dossier *fullProblem* contient ceux du problèmes général.
 
 - [ ] Réécrtiture de la solution selon un paradigme objet
 - [x] ajout d'une animation
-- [ ] augmentation de la robustesse de la solution généralisée
+- [ ] amélioration de la robustesse de la solution généralisée
 - [ ] amélioration de performance via *Cython*
 
 ## Résultats
 
 ### Descente de gradient
 
-Lente mais robuste.
+Particulièrement lente autour des points selles mais robuste.
 
 ![Descente de gradient](./simplerProblem/descenteGradient_comp.gif)
 
 ### Méthode de Newton
 
-Rapide mais risque élevé de divergence.
+Rapide mais ne différencie pas les points selles des minima.
 
 ![Méthode de Newton](./simplerProblem/methodeNewton.gif)
