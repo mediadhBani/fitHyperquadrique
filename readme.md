@@ -1,4 +1,4 @@
-# Fit d'un nuage par hyperquadrique
+# Fit d'un nuage de points par hyperquadrique
 
 ## Objectif
 
