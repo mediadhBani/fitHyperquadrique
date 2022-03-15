@@ -1,15 +1,14 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Feb  1 21:07:26 2021
-
-@author: Mohamed-iadh BANI
-"""
-
-# modules
 import hyperquadrique as h  # contient les fonctions des phases 1 et 2
 from initialise_coefHQ import initialise_coefHQ
+import logging
 import matplotlib.pyplot as plt
 import numpy as np
+
+# Create a custom logger
+logger = logging.getLogger(__file__)
+logging.basicConfig(format='%(asctime)s %(levelname)-8s -- %(message)s',
+                    level=logging.INFO,
+                    datefmt='%y%m%d-%H%M%S')
 
 # CONSTANTES
 K1, K2 = 10, 10  # facteurs d'ajustement d'espace de recherche
@@ -199,9 +198,8 @@ def levenberg_marquardt(x, y, lam0, nmax, eps=1e-6, nu=1e-8):
             # mauvais conditionnement, mais il reste intéressant de récupérer la
             # dernière itération de lam
             if np.any(np.isnan(inv)):
-                print('######################################################')
-                print('Erreur : dernier paramétrage hyperquadrique renvoyé.')
-                print('######################################################')
+                logging.warning("NaN détecté => Matrice mal conditionnée.\n\
+                    dernier paramétrage hyperquadrique renvoyé.")
                 return lam, True
 
             # DLam = np.tensordot(inv, -DJ, 1)
