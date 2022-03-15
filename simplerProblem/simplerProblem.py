@@ -1,14 +1,6 @@
-import logging
 # from matplotlib import animation
 import matplotlib.pyplot as plt
 import numpy as np
-import sys
-
-# Create a custom logger
-logger = logging.getLogger(__file__)
-logging.basicConfig(format='%(asctime)s %(levelname)-8s -- %(message)s',
-                    level=logging.INFO,
-                    datefmt='%y%m%d-%H%M%S')
 
 def hyperquadrique(x: float, y: float, lsParam: list[list[float]]) -> float:
     """Calcule de la fonction hyperquadrique en un point donne.
@@ -270,8 +262,6 @@ if __name__ == '__main__':
     #                         levels=[0], colors='r')
 
     # for fct, arg, ttl, fnm in zip(lsFct, lsArg, lsTitle, lsFname):
-    #     logging.info(ttl + " en cours...")
-
     #     lsA, lsB, idx, cvg = fct(*pts, **arg)
 
     #     fig, ax = plt.subplots(1, 2, num=ttl)
