@@ -17,7 +17,7 @@ def hyperquadrique(x: float, y: float, lsParam: list[list[float]]) -> float:
     return som-1
 
 def droites_enveloppantes(lsParam: list[list[float]], ylim: tuple,
-                          ax: plt.gca()) -> list:
+                          ax=plt.gca()) -> list:
 
     """Trace les droites enveloppantes de l'hyperquadrique de parametres donnes.
 
@@ -31,12 +31,13 @@ def droites_enveloppantes(lsParam: list[list[float]], ylim: tuple,
         (classe ~matplotlib.collections.LineCollection)
     """
 
+    lsLines = []
     for a, b, c, _ in lsParam:
         if b:
-            lsLines = [ax.axline((0, (c+1)/-b), slope=-a/b, lw=1),
-                       ax.axline((0, (c-1)/-b), slope=-a/b, lw=1)]
+            lsLines.extend([ax.axline((0, (c+1)/-b), slope=-a/b, lw=1),
+                            ax.axline((0, (c-1)/-b), slope=-a/b, lw=1)])
         else:
-            lsLines = [ax.vlines([-(c+1)/a, (1-c)/a], *ylim, lw=1)]
+            lsLines.append(ax.vlines([-(c+1)/a, (1-c)/a], *ylim, lw=1))
 
     return lsLines
 
@@ -117,6 +118,8 @@ def hess_fn_objectif(x: float, y: float, a: float, b: float) -> list[list[float]
         som[1][1] += v*v*etape3
     return som
 
+################################################################################
+
 def descente_gradient(x: list[float], y: list[float], a0: float, b0: float,
                       alpha: float, nmax: int=50, eps: float=1e-6):
     """Descente de gradient
@@ -182,6 +185,8 @@ def newton(x: list[float], y: list[float], a0: float, b0: float,
             break
 
     return lsA, lsB, i, convergence
+
+################################################################################
 
 if __name__ == '__main__':
     # Extraction de points
