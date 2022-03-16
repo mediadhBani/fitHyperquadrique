@@ -1,4 +1,4 @@
-import hyperquadrique as h  # contient les fonctions des phases 1 et 2
+import helper as h
 from initialise_coefHQ import initialise_coefHQ
 import logging
 import matplotlib.pyplot as plt
@@ -13,41 +13,15 @@ logging.basicConfig(format='%(asctime)s %(levelname)-8s -- %(message)s',
 # CONSTANTES
 K1, K2 = 10, 10  # facteurs d'ajustement d'espace de recherche
 
-# D'abord les commandes simples.
-
-def couronne_nuage(x: list[float], y: list[float]) -> tuple[float, float]:
-    """Determine les rayons de la couronne incluant l'ensemble d'un nuage de
-    points
-    
-    Entree:
-    - x, y: listes des coordonnes du nauges dans chaque direction de l'espace
-    
-    Sortie:
-    - smin: rayon interieur de la couronne
-    - smax: rayon exterieur de la couronne
-    """
-    xc, yc = np.mean(x), np.mean(y)  # coordonnées du centre du nuage
-    smin, smax = np.inf, 0           # rayons minimal et maximal
-
-    for u, v in zip(x, y):
-        dist = np.sqrt((u-xc)**2 + (v-yc)**2)  # distance par rapport au centre
-        smin = min(smin, dist)
-        smax = max(smax, dist)
-
-    return smin, smax
-
-def signe(x: float):
+def signe(x: float) -> int:
     """Fonction signe. Renvoie -1 si l'argument est strictement negatif,
-    1 sinon
-    
-    Entree:
-    - x: """
+    1 sinon.
+    """
     return -1 if x < 0 else 1
-
 
 # DERIVEES DU PARAMETRAGE DE L'HYPERQUADRIQUE #
 
-def grad_hyperquadrique(x, y, hq):
+def grad_hyperquadrique(x, y, hq: h.PrmHQ):
     """Dérivée du point image de l'hyperquadrique `hq` au point (`x`, `y`)"""
     grad = []
     for a, b, c, g in hq:
@@ -56,7 +30,6 @@ def grad_hyperquadrique(x, y, hq):
         grad.extend([x*etape, y*etape, etape])
 
     return np.array(grad)
-
 
 def hess_hyperquadrique(x, y, hq):
     """Hessienne du point image de l'hyperquadrique `hq` au point (`x`, `y`)
@@ -75,19 +48,17 @@ def hess_hyperquadrique(x, y, hq):
 
     return H  # matrice multi-diagonale
 
-# FONCTION Fio ET SES DERIVEES #
+################################################################################
 
 def fio(x, y, hq):
     """Fonction inside-outside au de l'hyperquadrique `hq` au point (`x`,`y`)
     """
     return np.sqrt(np.sqrt(h.hyperquadrique(x, y, hq)))
 
-
 def grad_fio(x, y, hq):
     """Dérivée de la fonction inside-outside au de l'hyperquadrique `hq` au
     point (`x`,`y`)"""
     return grad_hyperquadrique(x, y, hq) / h.hyperquadrique(x, y, hq)**.75 / 4
-
 
 def hess_fio(x, y, hq):
     """Hessienne de la fonction inside-outside de l'hyperquadrique `hq` au
@@ -99,15 +70,12 @@ def hess_fio(x, y, hq):
 
     return f1*np.tensordot(grd, grd, 0) + f2*hss
 
-# FONCTION EOF1 ET SES DERIVEES #
-
 def eof1(x, y, hq):
     """Fonction erreur de fit biaisée."""
     som = 0
     for u, v in zip(x, y):
         som += (1-fio(u, v, hq))**2
     return som/2
-
 
 def grad_eof1(x, y, hq):
     """Gradient de l'erreur de fit biaisée."""
@@ -116,7 +84,6 @@ def grad_eof1(x, y, hq):
         grad = grad + 2*(1-fio(u, v, hq))*grad_fio(u, v, hq)
 
     return grad
-
 
 def hess_eof1(x, y, hq):
     """Hessienne de l'erreur de fit biaisée."""
@@ -127,6 +94,8 @@ def hess_eof1(x, y, hq):
         hess = hess + 2*np.tensordot(Df, Df, 0) + 2*(1-f)*Hf
 
     return hess
+
+################################################################################
 
 # FONCTION PENALITE ET SES DERIVEES #
 
@@ -141,8 +110,7 @@ def penalite(hq):
         penalite += max(0, mu1-etape)**2 + max(0, etape-mu2)**2
     return penalite
 
-
-def grad_penalite(hq):
+def grad_penalite(hq: list):
     """Gradient de la pénalité dans la fonction objectif si le domaine de
     l'hyperquadtraique définie par ses droites enveloppantes est trop large."""
     # profitons de la portée des variables mu1 et mu2 pour ne pas avoir à les
@@ -155,7 +123,6 @@ def grad_penalite(hq):
         grad.extend([a*etape, b*etape, 0])
 
     return np.array(grad)
-
 
 def hess_penalite(hq):
     """Hessienne de la pénalité dans la fonction objectif si le domaine de
@@ -173,19 +140,23 @@ def hess_penalite(hq):
 
     return H
 
+################################################################################
 
 def objectif(x, y, hq, nu=1e-8):
     """Fonction objectif pénalisée à minimiser."""
     return eof1(x, y, hq) + nu*penalite(hq)
 
-def levenberg_marquardt(x, y, lam0, nmax, eps=1e-6, nu=1e-8):
+def levenberg_marquardt(x, y, lam0, nmax: int=50, eps: float=1e-6, nu: float=1e-8):
     """Algorithme de Levenberg-Marquardt. Renvoie une hyperquadrique
     optimisée et un signal d'erreur."""
     lng = len(lam0)  # nombre de termes dans l'hyperquadrique
     cH = lng*3       # côté de la hessienne
 
-    bet, n, dLam = .01, 0, np.inf     # réels
+    bet, n, dLam = .01, 0, np.inf    # réels
     lam = np.array(lam0.copy())      # copie de l'hyperquadrique, matrice
+
+    # for i in range(nmax):
+    #     pass
 
     while dLam > eps and n < nmax:
         grd = grad_eof1(x, y, lam) + nu*grad_penalite(lam)
@@ -237,31 +208,26 @@ def schema_general(x, y, lam0, nmax=5, eps=1e-6):
 
 if __name__ == '__main__':
     # NOM DE FICHIER ICI
-    # extraction du nuage de points
-    with open('truc.txt', 'r') as f:
-        nuage = np.array([[float(u) for u in ligne.split(',')] for ligne in f.readlines()])
-
-    # rayons de la couronne du nuage de points
-    smin, smax = couronne_nuage(*nuage)
+    
+    nuage = h.extraire_nuage('hq1b1.csv')  # extraction nuage de points
+    smin, smax = h.couronne_nuage(*nuage)  # rayons couronne nuage de points
 
     # variables mu intervenant dans la contrainte du domaine de recherche
     mu1, mu2 = 4/(K1*smax)**2, 4/(K2*smin)**2
 
     # nombre de termes arbitraire (>2)
-    parametresHQ = initialise_coefHQ(*nuage, 3)  
+    parametresHQ: h.PrmHQ=initialise_coefHQ(*nuage, 3)
 
     # affichage des paramètres de l'hyperquadrique
     h.decrire_hyperquadrique(parametresHQ)
-    plt.close('all')
-    xn, yn = nuage
-    x = np.linspace(min(xn)-10, max(xn)+10)
-    y = np.linspace(min(yn)-10, max(yn)+10)
-    nuage = np.meshgrid(x, y)
-    neo, n, cvrg = schema_general(xn, yn, parametresHQ, 3)
-    plt.scatter(xn, yn)
 
-    h.traceHQ(*nuage, parametresHQ)
-    h.traceHQ(*nuage, neo, 'r')
+    exit()
+    mesh = np.meshgrid(x, y)
+    neo, n, cvrg = schema_general(*nuage, parametresHQ, 3)
+
+    plt.scatter(nuage)
+    h.traceHQ(*mesh, parametresHQ)
+    h.traceHQ(*mesh, neo, 'r')
 
     plt.title(cvrg)
     plt.axis('square')
